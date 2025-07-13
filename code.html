@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="max-width=device-width, initial-scale=1.0"/>
+  <title>World Currency Converter</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/css/flag-icons.min.css">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
+      overflow: hidden;
+    }
+
+    video#bgVideo {
+      position: fixed;
+      top: 0;
+      left: 0;
+      min-width: 100%;
+      min-height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      margin: 50px auto;
+      max-width: 500px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0,0,0,0.7);
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      text-align: left;
+      margin-top: 5px;
+      font-weight: bold;
+    }
+    #amount {
+      width: 80%;
+      font-size: 15px;
+      padding: 10px;}
+
+
+    select, input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: lightgreen;
+      color: white;
+      font-weight: bold;
+      transition: background-color 0.3s;
+      border: none;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    .result {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+
+    .flag-wrapper {
+      display: flex;
+      align-items: center;
+    }
+
+    .flag-icon {
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Video -->
+  <video autoplay muted loop id="bgVideo">
+    <source src="Background.mp4" type="video/mp4">
+    Your browser does not support HTML5 video.
+  </video>
+
+  <div class="container">
+    <h1>🌍 Currency Converter</h1>
+
+    <label for="fromCountry">From Country:</label>
+    <div class="flag-wrapper">
+      <span id="fromFlag" class="flag-icon"></span>
+      <select id="fromCountry"></select>
+    </div>
+
+    <label for="toCountry">To Country:</label>
+    <div class="flag-wrapper">
+      <span id="toFlag" class="flag-icon"></span>
+      <select id="toCountry"></select>
+    </div>
+
+    <label for="amount">Amount:</label>
+    <input type="number" id="amount" placeholder="Enter amount" />
+
+    <button onclick="convertCurrency()">Convert</button>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    const countryCurrencyMap = {
+  "Afghanistan": { code: "AFN", name: "Afghani", iso: "af" },
+  "Argentina": { code: "ARS", name: "Argentine Peso", iso: "ar" },
+  "Australia": { code: "AUD", name: "Australian Dollar", iso: "au" },
+  "Bangladesh": { code: "BDT", name: "Taka", iso: "bd" },
+  "Brazil": { code: "BRL", name: "Real", iso: "br" },
+  "Canada": { code: "CAD", name: "Canadian Dollar", iso: "ca" },
+  "China": { code: "CNY", name: "Yuan", iso: "cn" },
+  "Denmark": { code: "DKK", name: "Krone", iso: "dk" },
+  "Egypt": { code: "EGP", name: "Egyptian Pound", iso: "eg" },
+  "France": { code: "EUR", name: "Euro", iso: "fr" },
+  "Germany": { code: "EUR", name: "Euro", iso: "de" },
+  "India": { code: "INR", name: "Rupee", iso: "in" },
+  "Indonesia": { code: "IDR", name: "Rupiah", iso: "id" },
+  "Ireland": { code: "EUR", name: "Euro", iso: "ie" },
+  "Israel": { code: "ILS", name: "Shekel", iso: "il" },
+  "Italy": { code: "EUR", name: "Euro", iso: "it" },
+  "Japan": { code: "JPY", name: "Yen", iso: "jp" },
+  "Malaysia": { code: "MYR", name: "Ringgit", iso: "my" },
+  "Mexico": { code: "MXN", name: "Peso", iso: "mx" },
+  "Netherlands": { code: "EUR", name: "Euro", iso: "nl" },
+  "New Zealand": { code: "NZD", name: "NZ Dollar", iso: "nz" },
+  "Nigeria": { code: "NGN", name: "Naira", iso: "ng" },
+  "Norway": { code: "NOK", name: "Krone", iso: "no" },
+  "Pakistan": { code: "PKR", name: "Rupee", iso: "pk" },
+  "Philippines": { code: "PHP", name: "Peso", iso: "ph" },
+  "Poland": { code: "PLN", name: "Zloty", iso: "pl" },
+  "Portugal": { code: "EUR", name: "Euro", iso: "pt" },
+  "Qatar": { code: "QAR", name: "Riyal", iso: "qa" },
+  "Russia": { code: "RUB", name: "Ruble", iso: "ru" },
+  "Saudi Arabia": { code: "SAR", name: "Riyal", iso: "sa" },
+  "Singapore": { code: "SGD", name: "Singapore Dollar", iso: "sg" },
+  "South Africa": { code: "ZAR", name: "Rand", iso: "za" },
+  "South Korea": { code: "KRW", name: "Won", iso: "kr" },
+  "Spain": { code: "EUR", name: "Euro", iso: "es" },
+  "Sri Lanka": { code: "LKR", name: "Rupee", iso: "lk" },
+  "Sweden": { code: "SEK", name: "Krona", iso: "se" },
+  "Switzerland": { code: "CHF", name: "Swiss Franc", iso: "ch" },
+  "Taiwan": { code: "TWD", name: "New Taiwan Dollar", iso: "tw" },
+  "Thailand": { code: "THB", name: "Baht", iso: "th" },
+  "Turkey": { code: "TRY", name: "Lira", iso: "tr" },
+  "Ukraine": { code: "UAH", name: "Hryvnia", iso: "ua" },
+  "United Arab Emirates": { code: "AED", name: "Dirham", iso: "ae" },
+  "United Kingdom": { code: "GBP", name: "Pound", iso: "gb" },
+  "United States": { code: "USD", name: "Dollar", iso: "us" },
+  "Vietnam": { code: "VND", name: "Dong", iso: "vn" }
+};
+
+    const fromSel = document.getElementById("fromCountry");
+    const toSel = document.getElementById("toCountry");
+    const fromFlag = document.getElementById("fromFlag");
+    const toFlag = document.getElementById("toFlag");
+
+    for (let country in countryCurrencyMap) {
+      const option = new Option(country, country);
+      fromSel.add(option.cloneNode(true));
+      toSel.add(option);
+    }
+
+    function updateFlags() {
+      const fromIso = countryCurrencyMap[fromSel.value]?.iso || "us";
+      const toIso = countryCurrencyMap[toSel.value]?.iso || "in";
+      fromFlag.className = `flag-icon fi fi-${fromIso}`;
+      toFlag.className = `flag-icon fi fi-${toIso}`;
+    }
+
+    fromSel.onchange = toSel.onchange = updateFlags;
+    window.onload = () => {
+      fromSel.value = "United States";
+      toSel.value = "India";
+      updateFlags();
+    };
+
+    async function convertCurrency() {
+      const fromCountry = fromSel.value;
+      const toCountry = toSel.value;
+      const amount = parseFloat(document.getElementById("amount").value);
+      const resultDiv = document.getElementById("result");
+
+      if (!amount || amount <= 0) {
+        resultDiv.textContent = "Enter a valid amount.";
+        return;
+      }
+
+      const fromCode = countryCurrencyMap[fromCountry].code;
+      const toCode = countryCurrencyMap[toCountry].code;
+
+      const storeKey = `rates-${fromCode}`;
+      let rates = null;
+
+      try {
+        const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${fromCode}`);
+        rates = await response.json();
+        localStorage.setItem(storeKey, JSON.stringify(rates));
+      } catch (e) {
+        const cached = localStorage.getItem(storeKey);
+        if (cached) {
+          rates = JSON.parse(cached);
+        } else {
+          resultDiv.textContent = "Offline & no cached data available.";
+          return;
+        }
+      }
+
+      const rate = rates.rates[toCode];
+      const converted = (amount * rate).toFixed(2);
+      resultDiv.innerHTML = `${amount} ${countryCurrencyMap[fromCountry].name} = 
+        <strong>${converted} ${countryCurrencyMap[toCountry].name}</strong> 
+        (Rate: 1 ${fromCode} = ${rate.toFixed(4)} ${toCode})`;
+    }
+  </script>
+</body>
+</html>
